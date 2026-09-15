@@ -1,7 +1,9 @@
+import { persona } from "./persona.js";
+
 export function renderMessages(messages, container) {
 	const lignes = messages.map((msg) => {
 		const li = document.createElement("li");
-		const etiquette = msg.role === "user" ? "Vous" : "Cap Web";
+		const etiquette = msg.role === "user" ? "Vous" : persona.nom;
 		li.dataset.role = msg.role;
 		li.append(`${etiquette} : `, ...renderText(msg.text));
 		return li;

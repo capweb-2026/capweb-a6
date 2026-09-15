@@ -1,9 +1,12 @@
 import { validateMessage, replyTo } from "./brain.js";
+import { persona } from "./persona.js";
 import { renderMessages } from "./view.js";
 
 const formulaire = document.querySelector("#chat-form");
 const champ = document.querySelector("#message");
 const liste = document.querySelector("#messages");
+const accueil = document.querySelector("#accueil");
+const suggestions = document.querySelector("#suggestions");
 const statut = document.querySelector("#status");
 const boutonEnvoyer = formulaire.querySelector('button[type="submit"]');
 const boutonEffacer = document.querySelector("#effacer");
@@ -14,6 +17,36 @@ const historique = [];
 
 let langue = "fr";
 let capWebEcrit = false;
+
+function afficherIdentite() {
+	if (accueil) {
+		accueil.textContent = persona.accueil;
+	}
+	if (suggestions) {
+		const boutons = persona.suggestions.map((suggestion) => {
+			const bouton = document.createElement("button");
+			bouton.type = "button";
+			bouton.textContent = suggestion;
+			bouton.addEventListener("click", () => {
+				champ.value = suggestion;
+				champ.focus();
+			});
+			return bouton;
+		});
+		suggestions.replaceChildren(...boutons);
+	}
+	mettreAJourIdentite();
+}
+
+function mettreAJourIdentite() {
+	const conversationVide = historique.length === 0;
+	if (accueil) {
+		accueil.hidden = !conversationVide;
+	}
+	if (suggestions) {
+		suggestions.hidden = !conversationVide;
+	}
+}
 
 const themeSauvegarde = localStorage.getItem("capweb.theme");
 if (themeSauvegarde === "dark" || themeSauvegarde === "light") {
@@ -52,6 +85,7 @@ formulaire.addEventListener("submit", (event) => {
 		historique.length = 0;
 		localStorage.removeItem("capweb.historique");
 		renderMessages(historique, liste);
+		mettreAJourIdentite();
 		champ.value = "";
 		statut.textContent = "";
 		champ.focus();
@@ -62,11 +96,12 @@ formulaire.addEventListener("submit", (event) => {
 	const prochaineLangue = resultat.value.toLowerCase() === "/lang en" ? "en" : langue;
 	historique.push({ role: "user", text: resultat.value });
 	renderMessages(historique, liste);
+	mettreAJourIdentite();
 	enregistrer();
 
 	capWebEcrit = true;
 	boutonEnvoyer.disabled = true;
-	statut.textContent = "Cap Web écrit…";
+	statut.textContent = `${persona.nom} écrit…`;
 
 	setTimeout(() => {
 		langue = prochaineLangue;
@@ -75,6 +110,7 @@ formulaire.addEventListener("submit", (event) => {
 			text: replyTo(resultat.value, nombreMessages, langue)
 		});
 		renderMessages(historique, liste);
+		mettreAJourIdentite();
 		enregistrer();
 
 		champ.value = "";
@@ -90,6 +126,7 @@ boutonEffacer.addEventListener("click", () => {
 		historique.length = 0;
 		localStorage.removeItem("capweb.historique");
 		renderMessages(historique, liste);
+		mettreAJourIdentite();
 	}
 });
 
@@ -102,7 +139,7 @@ boutonTheme.addEventListener("click", () => {
 
 boutonExporter.addEventListener("click", () => {
 	const contenu = historique
-		.map((message) => `${message.role === "user" ? "Vous" : "Cap Web"} : ${message.text}`)
+		.map((message) => `${message.role === "user" ? "Vous" : persona.nom} : ${message.text}`)
 		.join("\n");
 	const blob = new window.Blob([contenu], { type: "text/plain;charset=utf-8" });
 	const url = window.URL.createObjectURL(blob);
@@ -116,6 +153,8 @@ boutonExporter.addEventListener("click", () => {
 function enregistrer() {
 	localStorage.setItem("capweb.historique", JSON.stringify(historique));
 }
+
+afficherIdentite();
 
 // Version du serveur local, échec discret si indisponible.
 fetch("/version.json", { headers: { accept: "application/json" } })
