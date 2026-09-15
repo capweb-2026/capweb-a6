@@ -192,9 +192,8 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:smoke
         env:
-          # Domaine public de prod s'il est déclaré (ce que voient les visiteurs) ;
-          # sinon adresse unique du déploiement, protégée, ouverte par le secret de contournement.
-          BASE_URL: ${{ vars.URL_PRODUCTION || needs.production.outputs.url }}
+          # Pour valider le commit exact déployé dans ce run, tester l'URL renvoyée par `vercel deploy`.
+          BASE_URL: ${{ needs.production.outputs.url }}
           EXPECTED_SHA: ${{ github.sha }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
