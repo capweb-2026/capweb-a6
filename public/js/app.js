@@ -63,11 +63,11 @@ if (sauvegarde) {
 		historique.push(...messages);
 		renderMessages(historique, liste);
 	} catch {
-		statut.textContent = "La conversation sauvegardée est abîmée";
+		statut.textContent = "La conversation sauvegardee est abimee";
 	}
 }
 
-formulaire.addEventListener("submit", (event) => {
+formulaire.addEventListener("submit", async (event) => {
 	event.preventDefault();
 
 	if (capWebEcrit) {
@@ -94,6 +94,7 @@ formulaire.addEventListener("submit", (event) => {
 
 	const nombreMessages = historique.length;
 	const prochaineLangue = resultat.value.toLowerCase() === "/lang en" ? "en" : langue;
+	const historiqueAvantEnvoi = [...historique];
 	historique.push({ role: "user", text: resultat.value });
 	renderMessages(historique, liste);
 	mettreAJourIdentite();
@@ -101,24 +102,26 @@ formulaire.addEventListener("submit", (event) => {
 
 	capWebEcrit = true;
 	boutonEnvoyer.disabled = true;
-	statut.textContent = `${persona.nom} écrit…`;
+	statut.textContent = `${persona.nom} ecrit...`;
 
-	setTimeout(() => {
+	try {
+		const reponse = await demanderReponse(resultat.value, historiqueAvantEnvoi, nombreMessages, prochaineLangue);
 		langue = prochaineLangue;
 		historique.push({
 			role: "assistant",
-			text: replyTo(resultat.value, nombreMessages, langue)
+			text: reponse.texte
 		});
 		renderMessages(historique, liste);
 		mettreAJourIdentite();
 		enregistrer();
 
 		champ.value = "";
-		statut.textContent = "";
+		statut.textContent = reponse.source === "ia" ? "" : "mode degrade";
+	} finally {
 		boutonEnvoyer.disabled = false;
 		capWebEcrit = false;
 		champ.focus();
-	}, 1000);
+	}
 });
 
 boutonEffacer.addEventListener("click", () => {
@@ -154,9 +157,32 @@ function enregistrer() {
 	localStorage.setItem("capweb.historique", JSON.stringify(historique));
 }
 
+async function demanderReponse(message, historiqueAvantEnvoi, nombreMessages, prochaineLangue) {
+	try {
+		const reponse = await fetch("/api/chat", {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ message, historique: historiqueAvantEnvoi })
+		});
+		if (!reponse.ok) {
+			throw new Error("api chat indisponible");
+		}
+
+		const donnees = await reponse.json();
+		if (typeof donnees.texte === "string" && typeof donnees.source === "string") {
+			return donnees;
+		}
+		throw new Error("reponse api invalide");
+	} catch {
+		return {
+			texte: replyTo(message, nombreMessages, prochaineLangue),
+			source: "regles"
+		};
+	}
+}
+
 afficherIdentite();
 
-// Version du serveur local, échec discret si indisponible.
 fetch("/version.json", { headers: { accept: "application/json" } })
 	.then((reponse) => (reponse.ok ? reponse.json() : null))
 	.then((donnees) => {
