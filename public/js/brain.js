@@ -76,7 +76,7 @@ const REGLES = {
 	},
 };
 
-export function validateMessage(raw) {
+function validerMessageStrict(raw) {
 	if (typeof raw !== "string") {
 		return { ok: false, error: "Le message doit être du texte" };
 	}
@@ -132,4 +132,17 @@ function motsConnus(texte) {
 
 function contient(mots, choix) {
 	return mots.some((mot) => choix.includes(mot));
+}
+
+// Tolérance : un message à peine trop long (jusqu'à 300 caractères) reste accepté.
+export function validateMessage(raw) {
+  const resultat = validerMessageStrict(raw);
+  if (resultat.ok || typeof raw !== 'string') {
+    return resultat;
+  }
+  const value = raw.trim();
+  if (value !== '' && value.length <= 300) {
+    return { ok: true, value };
+  }
+  return resultat;
 }
