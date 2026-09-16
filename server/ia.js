@@ -87,8 +87,8 @@ export async function repondreAvecIA({ message, historique = [], fournisseur, de
 }
 
 export function fournisseurDepuisEnv(env = process.env, fetchFn = fetch) {
-  const url = typeof env.CAPWEB_IA_URL === 'string' ? env.CAPWEB_IA_URL : '';
-  const cle = typeof env.CAPWEB_IA_CLE === 'string' ? env.CAPWEB_IA_CLE : '';
+  const url = typeof env.CAPWEB_IA_URL === 'string' ? env.CAPWEB_IA_URL.trim() : '';
+  const cle = typeof env.CAPWEB_IA_CLE === 'string' ? env.CAPWEB_IA_CLE.trim() : '';
 
   if (url.trim() === '' || cle.trim() === '') {
     return null;
