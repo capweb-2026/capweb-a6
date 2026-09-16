@@ -17,6 +17,12 @@ function reponseRegles(message) {
   };
 }
 
+function notifierRepli(journal, raison) {
+  if (typeof journal === 'function') {
+    journal(raison);
+  }
+}
+
 function normaliserHistorique(historique) {
   if (!Array.isArray(historique)) {
     return [];
@@ -43,7 +49,7 @@ function avecDelai(operation, delaiMs) {
   let minuteur;
   const delai = new Promise((_, reject) => {
     minuteur = setTimeout(() => {
-      reject(new Error('delai depasse'));
+      reject(new Error('delai_depasse'));
     }, delaiMs);
   });
 
@@ -52,7 +58,7 @@ function avecDelai(operation, delaiMs) {
   });
 }
 
-export async function repondreAvecIA({ message, historique = [], fournisseur, delaiMs = DELAI_IA_MS } = {}) {
+export async function repondreAvecIA({ message, historique = [], fournisseur, delaiMs = DELAI_IA_MS, journal } = {}) {
   const validation = validateMessage(message);
   if (!validation.ok) {
     return {
@@ -62,6 +68,7 @@ export async function repondreAvecIA({ message, historique = [], fournisseur, de
   }
 
   if (typeof fournisseur !== 'function') {
+    notifierRepli(journal, 'configuration_absente');
     return reponseRegles(validation.value);
   }
 
@@ -74,6 +81,7 @@ export async function repondreAvecIA({ message, historique = [], fournisseur, de
     );
 
     if (typeof texte !== 'string' || texte.trim() === '') {
+      notifierRepli(journal, 'reponse_ia_vide');
       return reponseRegles(validation.value);
     }
 
@@ -81,7 +89,8 @@ export async function repondreAvecIA({ message, historique = [], fournisseur, de
       texte: texte.trim(),
       source: 'ia'
     };
-  } catch {
+  } catch (erreur) {
+    notifierRepli(journal, erreur instanceof Error ? erreur.message : 'appel_ia_echec');
     return reponseRegles(validation.value);
   }
 }
@@ -108,16 +117,20 @@ export function fournisseurDepuisEnv(env = process.env, fetchFn = fetch) {
     });
 
     if (!reponse.ok) {
-      throw new Error(`passerelle ${reponse.status}`);
+      throw new Error(`passerelle_${reponse.status}`);
     }
 
     const donnees = await reponse.json();
     const texte = donnees?.choices?.[0]?.message?.content;
     if (typeof texte !== 'string') {
-      throw new Error('reponse IA invalide');
+      throw new Error('reponse_ia_invalide');
     }
     return texte;
   };
+}
+
+function journaliserRepli(raison) {
+  console.warn(`[netquiz-ia] repli=${raison}`);
 }
 
 export async function lireJson(req) {
@@ -139,6 +152,7 @@ export async function repondreRequeteChat(req, env = process.env) {
   return repondreAvecIA({
     message: corps.message,
     historique: corps.historique,
-    fournisseur: fournisseurDepuisEnv(env)
+    fournisseur: fournisseurDepuisEnv(env),
+    journal: journaliserRepli
   });
 }
