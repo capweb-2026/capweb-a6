@@ -1,6 +1,9 @@
 import { replyTo, validateMessage } from '../public/js/brain.js';
 
-export const DELAI_IA_MS = 3500;
+export const DELAI_IA_MS = 8000;
+
+const MOTS_IMMEDIATS = new Set(['salut', 'bonjour', 'coucou', 'hello', 'aide', 'help', 'test', 'essai']);
+const COMMANDES_IMMEDIATES = new Set(['/aide', '/compte', '/lang en']);
 
 const PROMPT_SYSTEME = [
   'Tu es NetQuiz, un assistant de revision reseaux.',
@@ -15,6 +18,16 @@ function reponseRegles(message) {
     texte: replyTo(message),
     source: 'regles'
   };
+}
+
+function estReponseImmediate(message) {
+  const texte = message.trim().toLowerCase();
+  if (COMMANDES_IMMEDIATES.has(texte)) {
+    return true;
+  }
+
+  const mots = texte.match(/[\p{L}\p{N}/]+/gu) ?? [];
+  return mots.some((mot) => MOTS_IMMEDIATS.has(mot));
 }
 
 function notifierRepli(journal, raison) {
@@ -69,6 +82,10 @@ export async function repondreAvecIA({ message, historique = [], fournisseur, de
 
   if (typeof fournisseur !== 'function') {
     notifierRepli(journal, 'configuration_absente');
+    return reponseRegles(validation.value);
+  }
+
+  if (estReponseImmediate(validation.value)) {
     return reponseRegles(validation.value);
   }
 
