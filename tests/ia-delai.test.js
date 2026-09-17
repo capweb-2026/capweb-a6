@@ -5,7 +5,7 @@ import { DELAI_IA_MS, repondreAvecIA } from '../server/ia.js';
 
 describe('strategie de delai IA', () => {
   it('laisse plus de temps aux questions qui partent a l IA', () => {
-    assert.equal(DELAI_IA_MS, 8000);
+    assert.equal(DELAI_IA_MS, 15000);
   });
 
   it('garde salut en reponse immediate par les regles quand l IA est configuree', async () => {

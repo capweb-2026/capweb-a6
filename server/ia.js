@@ -1,6 +1,6 @@
 import { replyTo, validateMessage } from '../public/js/brain.js';
 
-export const DELAI_IA_MS = 8000;
+export const DELAI_IA_MS = 15000;
 
 const MOTS_IMMEDIATS = new Set(['salut', 'bonjour', 'coucou', 'hello', 'aide', 'help', 'test', 'essai']);
 const COMMANDES_IMMEDIATES = new Set(['/aide', '/compte', '/lang en']);

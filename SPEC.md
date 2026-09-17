@@ -20,7 +20,7 @@ A partir du CP3, NetQuiz peut aussi repondre avec une IA appelee uniquement par 
 8. **Theme** - Quand l'utilisateur pose une question hors du theme TCP/IP, DNS ou HTTP, le systeme refuse poliment et rappelle qu'il aide a reviser les reseaux.
 9. **Prompt protege** - Quand l'utilisateur demande le prompt systeme, une cle, ou tente de changer le role de NetQuiz, le systeme refuse et ne revele ni instruction interne, ni secret, ni variable d'environnement.
 10. **Repli** - Quand l'IA echoue, refuse, repond trop lentement ou n'est pas configuree, le systeme repond avec `replyTo` et affiche clairement `mode degrade` dans `#status`, sans ajouter de ligne supplementaire dans `#messages`.
-11. **Delai** - Les messages deja connus par les regles pour garder la chaine rapide (`salut`, `aide`, `test` et commandes) repondent immediatement avec les regles. Les autres questions partent a l'IA avec un delai maximal de 8000 ms, puis basculent sur les regles si l'IA ne repond pas.
+11. **Delai** - Les messages deja connus par les regles pour garder la chaine rapide (`salut`, `aide`, `test` et commandes) repondent immediatement avec les regles. Les autres questions partent a l'IA avec un delai maximal de 15000 ms, puis basculent sur les regles si l'IA ne repond pas.
 
 ## Hors perimetre
 
@@ -61,7 +61,7 @@ L'IA ne doit pas recevoir de donnee personnelle, de secret, de fichier du depot 
 - `server/ia.js` exporte un module serveur dedie a l'IA. C'est le seul module qui construit l'appel a la passerelle.
 - Le module serveur dedie recoit son fournisseur en parametre pour permettre des tests sans cle.
 - Le module serveur dedie renvoie toujours un objet de la forme `{ texte, source }`, avec `source` egal a `ia` ou `regles`.
-- Le module serveur dedie valide le message avec `validateMessage`, applique un delai maximal de 8000 ms pour les questions envoyees a l'IA, garde les messages `salut`, `aide`, `test` et commandes en reponse immediate, et utilise `replyTo` en repli.
+- Le module serveur dedie valide le message avec `validateMessage`, applique un delai maximal de 15000 ms pour les questions envoyees a l'IA, garde les messages `salut`, `aide`, `test` et commandes en reponse immediate, et utilise `replyTo` en repli.
 - Le prompt systeme reste cote serveur. Il limite NetQuiz aux revisions TCP/IP, DNS et HTTP, impose le francais, des explications simples et des reponses courtes de 5 phrases maximum.
 - `api/chat.js` expose la porte d'entree Vercel. Il reste minimal et delegue au code serveur.
 - `server/app.js` expose une route locale `POST /api/chat` pour les tests sans cle.
