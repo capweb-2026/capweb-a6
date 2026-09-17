@@ -16,14 +16,19 @@
         <p id="accueil"></p>
         <div id="suggestions" aria-label="Questions suggérées"></div>
         <ul id="messages" aria-label="Messages" aria-live="polite"></ul>
+        <p id="en-attente" class="bulle-attente" hidden aria-live="polite"></p>
         <form id="chat-form">
           <label for="message">Votre message</label>
-          <textarea id="message" name="message" rows="3" required maxlength="280"></textarea>
-          <button type="submit">Envoyer</button>
+          <div class="saisie">
+            <textarea id="message" name="message" rows="3" required maxlength="280" placeholder="Entrée pour envoyer, Maj+Entrée pour aller à la ligne"></textarea>
+            <button type="submit" class="principal">Envoyer</button>
+          </div>
         </form>
-        <button type="button" id="effacer">Effacer la conversation</button>
-        <button type="button" id="theme">Changer le thème</button>
-        <button type="button" id="exporter">Exporter la conversation</button>
+        <div class="actions">
+          <button type="button" id="effacer" class="secondaire">Effacer la conversation</button>
+          <button type="button" id="theme" class="secondaire">Changer le thème</button>
+          <button type="button" id="exporter" class="secondaire">Exporter la conversation</button>
+        </div>
       </section>
       <p id="status" role="status"></p>
     </main>

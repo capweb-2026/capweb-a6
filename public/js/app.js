@@ -13,6 +13,7 @@ const boutonEffacer = document.querySelector("#effacer");
 const boutonTheme = document.querySelector("#theme");
 const boutonExporter = document.querySelector("#exporter");
 const versionElt = document.querySelector("#version");
+const enAttente = document.querySelector("#en-attente");
 const historique = [];
 
 let langue = "fr";
@@ -99,10 +100,12 @@ formulaire.addEventListener("submit", async (event) => {
 	renderMessages(historique, liste);
 	mettreAJourIdentite();
 	enregistrer();
+	champ.value = "";
 
 	capWebEcrit = true;
 	boutonEnvoyer.disabled = true;
-	statut.textContent = `${persona.nom} ecrit...`;
+	statut.textContent = "";
+	afficherAttente(true);
 
 	try {
 		const reponse = await demanderReponse(resultat.value, historiqueAvantEnvoi, nombreMessages, prochaineLangue);
@@ -115,14 +118,32 @@ formulaire.addEventListener("submit", async (event) => {
 		mettreAJourIdentite();
 		enregistrer();
 
-		champ.value = "";
 		statut.textContent = reponse.source === "ia" ? "" : "mode degrade";
 	} finally {
+		afficherAttente(false);
 		boutonEnvoyer.disabled = false;
 		capWebEcrit = false;
 		champ.focus();
 	}
 });
+
+champ.addEventListener("keydown", (event) => {
+	if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+		event.preventDefault();
+		formulaire.requestSubmit();
+	}
+});
+
+function afficherAttente(visible) {
+	if (!enAttente) {
+		return;
+	}
+	enAttente.textContent = visible ? `${persona.nom} : ecrit` : "";
+	enAttente.hidden = !visible;
+	if (visible) {
+		enAttente.scrollIntoView({ block: "nearest" });
+	}
+}
 
 boutonEffacer.addEventListener("click", () => {
 	if (confirm("Effacer la conversation ?")) {
